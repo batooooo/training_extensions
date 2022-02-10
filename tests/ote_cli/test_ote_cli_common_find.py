@@ -31,7 +31,7 @@ paths = ['.', '..', '...', 'external', 'not_exists', '!@#$%^&*()|/?', '123456789
 find_root_by_path_cmds = [[find_task_type_cmd, [task_type]] for task_type in task_types]
 
 
-@pytest.mark.parametrize("cmd, path", find_root_by_path_cmds, ids=paths)
+@pytest.mark.parametrize("cmd, path", find_root_by_path_cmds)
 def test_ote_cli_find_root(cmd, path):
     assert run(cmd + path).returncode == 0
 
