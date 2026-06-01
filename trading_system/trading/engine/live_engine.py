@@ -63,26 +63,32 @@ class LiveEngine:
             side.value, symbol, qty, why, result.id, result.status,
         )
 
-    def run_once(self) -> None:
-        """Run one decision cycle across all symbols."""
+    def _sizing_equity(self) -> float:
+        """Budget used for position sizing: the simulated capital base if set,
+        otherwise the real account equity. Also primes the daily-loss guard."""
         account = self.broker.get_account()
-        # Budget used for position sizing: the simulated capital base if set,
-        # otherwise the real account equity.
-        sizing_equity = (
-            self.capital_base if self.capital_base is not None else account.equity
-        )
         if not self._day_started:
             self.risk.start_day(account.equity)
             self._day_started = True
-
         if not self.risk.check_daily_loss(account.equity):
             logger.warning("daily loss limit hit -- new entries halted")
+        return self.capital_base if self.capital_base is not None else account.equity
 
+    def run_once(self) -> None:
+        """Run one decision cycle across all symbols (polling mode)."""
+        sizing_equity = self._sizing_equity()
         for symbol in self.symbols:
             try:
                 self._process_symbol(symbol, sizing_equity)
             except Exception:  # one bad symbol shouldn't kill the loop
                 logger.exception("error processing %s", symbol)
+
+    def run_symbol(self, symbol: str) -> None:
+        """Evaluate and act on a single symbol (used by the streaming engine)."""
+        try:
+            self._process_symbol(symbol, self._sizing_equity())
+        except Exception:
+            logger.exception("error processing %s", symbol)
 
     def _process_symbol(self, symbol: str, equity: float) -> None:
         data = self.data_fn(symbol)

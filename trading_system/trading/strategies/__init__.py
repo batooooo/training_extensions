@@ -10,12 +10,14 @@ from .bollinger import BollingerReversion
 from .macd import MacdStrategy
 from .rsi_reversion import RsiReversion
 from .sma_crossover import SmaCrossover
+from .trend_momentum import TrendMomentum
 
 _REGISTRY: dict[str, type[Strategy]] = {
     SmaCrossover.name: SmaCrossover,
     RsiReversion.name: RsiReversion,
     BollingerReversion.name: BollingerReversion,
     MacdStrategy.name: MacdStrategy,
+    TrendMomentum.name: TrendMomentum,
 }
 
 
@@ -42,6 +44,7 @@ __all__ = [
     "RsiReversion",
     "BollingerReversion",
     "MacdStrategy",
+    "TrendMomentum",
     "available",
     "create",
 ]

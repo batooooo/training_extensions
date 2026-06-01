@@ -90,6 +90,36 @@ def test_live_engine_uses_capital_base_for_sizing():
     assert pos is not None and pos.qty == 6  # 663.65 // 100, not 1000 (full equity)
 
 
+def test_stream_engine_acts_on_streamed_bar():
+    import asyncio
+    from types import SimpleNamespace
+
+    import numpy as np
+
+    from trading.engine import StreamEngine
+
+    close = np.linspace(100, 130, 60)
+    idx = pd.bdate_range("2026-01-01", periods=60)
+    hist = pd.DataFrame(
+        {"open": close, "high": close * 1.01, "low": close * 0.99,
+         "close": close, "volume": 1e6}, index=idx)
+
+    broker = SimulatedBroker(cash=100_000)
+    broker.set_price("AAPL", 131)
+    eng = StreamEngine(
+        broker, _AlwaysBuy(), ["AAPL"], history_fn=lambda s: hist,
+        api_key="k", api_secret="s",
+        risk_config=RiskConfig(max_position_pct=1.0), capital_base=663.65,
+        dry_run=False,
+    )
+    eng._seed_history()
+    bar = SimpleNamespace(symbol="AAPL", timestamp=idx[-1] + pd.Timedelta(days=1),
+                          open=131, high=132, low=130, close=131, volume=1e6)
+    asyncio.run(eng._on_bar(bar))
+    pos = broker.get_position("AAPL")
+    assert pos is not None and pos.qty == 5  # 663.65 // 131
+
+
 def test_live_engine_dry_run_submits_nothing():
     broker = SimulatedBroker(cash=10_000)
     broker.set_price("AAPL", 100)

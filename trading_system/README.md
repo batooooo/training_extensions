@@ -36,6 +36,7 @@ scripts/
 | `rsi_reversion` | 평균회귀 | RSI < 30 매수 / RSI > 70 매도 |
 | `bollinger`     | 평균회귀 | 하단 밴드 이탈 매수 / 상단 밴드 이탈 매도 |
 | `macd`          | 모멘텀   | MACD선 > 시그널선 매수 / 하향 매도 |
+| `trend_momentum`| 복합(추천) | 200일선 위 + EMA추세 + 모멘텀(+) + 비과열 매수 / 추세붕괴 시 청산 |
 
 `trading/strategies/`에 `Strategy`를 상속한 클래스를 추가하고 레지스트리에 등록하면
 새 전략을 바로 쓸 수 있습니다.

@@ -11,7 +11,7 @@ symbols:
   - MSFT
 
 strategy:
-  name: sma_crossover          # sma_crossover | rsi_reversion | bollinger | macd
+  name: sma_crossover          # sma_crossover | rsi_reversion | bollinger | macd | trend_momentum
   params:
     fast: 20
     slow: 50
