@@ -97,6 +97,36 @@ python scripts/backtest.py --csv data/SAMPLE.csv \
 
 리스크 매니저를 통과하지 않은 주문은 엔진이 내보내지 않습니다.
 
+## 포트폴리오 운용 (목표비중 + 소수점 + 월 적립)
+
+단일 신호 매매 대신, **목표비중 자산배분**으로 굴리는 방법입니다. 소수점(notional)
+매수를 지원해 소액으로도 정밀 분산이 됩니다.
+
+```bash
+# 1) 설정 준비 (코어/새틀라이트 또는 글로벌 올웨더 예시 중 택1)
+cp portfolio.allweather.example.yaml portfolio.yaml   # 글로벌 올웨더(8자산)
+#   또는: cp portfolio.example.yaml portfolio.yaml     # 코어80/새틀라이트20
+
+# 2) 계획만 확인 (주문 X)
+python scripts/rebalance.py --config portfolio.yaml --dry-run
+
+# 3) 목표비중대로 분산 매수 (페이퍼)
+python scripts/rebalance.py --config portfolio.yaml
+
+# 4) 매달 적립(DCA): 보유 평가액 + 신규 적립금 기준으로 자동 재분산 (수익 복리)
+python scripts/rebalance.py --config portfolio.yaml --from-holdings --contribution 66.36
+```
+
+- `targets`: 종목별 목표비중(합 ≤ 1.0, 나머지는 현금). 소수점 매수로 정확히 맞춤.
+- `regime_strategy`(선택): 설정 시 추세 이탈한 자산은 현금화(추세추종). 올웨더처럼
+  "항상 보유 후 리밸런싱"하려면 비워둡니다.
+- 월 적립 자동화(cron)는 [`AUTOMATION.md`](AUTOMATION.md) 참고.
+
+제공되는 예시 배분:
+- `portfolio.example.yaml` — 코어(분산 ETF) 80% + 새틀라이트(성장) 20%, 추세 국면필터
+- `portfolio.allweather.example.yaml` — 글로벌 성장형 올웨더(주식60/채권20/실물20,
+  미국+선진국+신흥국), 매수 후 정기 리밸런싱
+
 ## 테스트
 
 ```bash
@@ -111,4 +141,4 @@ pytest tests/ -v
 - 워크포워드 최적화, 파라미터 그리드 서치
 - IBKR 브로커 어댑터, 한국투자증권(KIS) 어댑터
 - 실시간 WebSocket 스트리밍 기반 분봉 트레이딩, 알림(Slack/텔레그램)
-```
+
