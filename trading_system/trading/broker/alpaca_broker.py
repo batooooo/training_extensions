@@ -72,7 +72,16 @@ class AlpacaBroker(Broker):
         )
 
         side = AlpacaSide.BUY if order.side is OrderSide.BUY else AlpacaSide.SELL
-        if order.type is OrderType.LIMIT:
+        if order.notional is not None:
+            # Fractional dollar-amount order (market, DAY).
+            req = MarketOrderRequest(
+                symbol=order.symbol,
+                notional=round(order.notional, 2),
+                side=side,
+                time_in_force=TimeInForce.DAY,
+                client_order_id=order.client_order_id,
+            )
+        elif order.type is OrderType.LIMIT:
             if order.limit_price is None:
                 raise ValueError("limit order requires limit_price")
             req = LimitOrderRequest(

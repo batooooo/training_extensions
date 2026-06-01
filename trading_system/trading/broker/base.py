@@ -28,6 +28,10 @@ class Order:
     side: OrderSide
     type: OrderType = OrderType.MARKET
     limit_price: float | None = None
+    #: Dollar amount for a fractional/notional order. When set, ``qty`` is
+    #: ignored and the broker buys/sells this much value (enables small accounts
+    #: to hit precise target weights). Market orders only.
+    notional: float | None = None
     client_order_id: str | None = None
     # Filled in by the broker after submission:
     id: str | None = None

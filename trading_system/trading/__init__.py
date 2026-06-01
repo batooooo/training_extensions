@@ -11,6 +11,7 @@ Default mode is paper trading; live trading must be enabled explicitly.
 """
 from . import broker, data, engine, risk, strategies, utils
 from .config import AppConfig, load_config
+from .portfolio import PortfolioManager, plan_rebalance
 
 __version__ = "0.1.0"
 
@@ -23,4 +24,6 @@ __all__ = [
     "utils",
     "AppConfig",
     "load_config",
+    "PortfolioManager",
+    "plan_rebalance",
 ]

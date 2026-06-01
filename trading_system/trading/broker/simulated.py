@@ -39,7 +39,10 @@ class SimulatedBroker(Broker):
 
     def submit_order(self, order: Order) -> Order:
         price = self.get_last_price(order.symbol)
-        cost = order.qty * price
+        # Notional (dollar-amount) orders translate to a fractional quantity.
+        qty = order.notional / price if order.notional is not None else order.qty
+        order.qty = qty
+        cost = qty * price
         if order.side is OrderSide.BUY:
             if cost > self._cash + 1e-9:
                 raise ValueError("insufficient cash in simulated broker")

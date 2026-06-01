@@ -1,6 +1,7 @@
 # Secrets & local config -- never commit these
 .env
 config.yaml
+portfolio.yaml
 
 # Generated/sample data and outputs
 data/*.csv
