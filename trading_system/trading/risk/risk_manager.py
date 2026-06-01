@@ -27,6 +27,12 @@ class RiskConfig:
     #: Halt new entries once the day's realized+unrealized loss exceeds this
     #: fraction of starting equity (e.g. 0.03 = -3%). None disables.
     max_daily_loss_pct: float | None = 0.03
+    #: Volatility sizing: fraction of capital to risk per trade (e.g. 0.01 = 1%).
+    #: When set, position size targets a fixed dollar risk = capital * this,
+    #: using an ATR-based stop distance. None -> simple percent-of-equity sizing.
+    risk_per_trade_pct: float | None = None
+    #: Stop distance in ATR units used for volatility sizing (e.g. 2 -> 2*ATR).
+    atr_stop_multiple: float = 2.0
 
     def __post_init__(self):
         if not 0 < self.max_position_pct <= 1:
@@ -48,10 +54,40 @@ class RiskManager:
         """Whole-share quantity for a new entry, respecting the per-position cap."""
         if price <= 0:
             return 0
+        return int(self._budget(equity) // price)
+
+    def _budget(self, equity: float) -> float:
+        """Cash ceiling for a single position."""
         budget = equity * self.config.max_position_pct
         if self.config.max_position_notional is not None:
             budget = min(budget, self.config.max_position_notional)
-        return int(budget // price)
+        return budget
+
+    def volatility_position_size(
+        self, equity: float, price: float, atr: float | None
+    ) -> int:
+        """Size so that an ATR-based stop risks a fixed fraction of capital.
+
+        shares = (equity * risk_per_trade_pct) / (atr_stop_multiple * ATR),
+        then capped by the per-position cash budget. Falls back to plain
+        :meth:`position_size` when volatility sizing is not configured or ATR
+        is unavailable. This is the professional "risk a fixed % per trade"
+        method: volatile names get smaller positions, calm names larger ones.
+        """
+        if (
+            self.config.risk_per_trade_pct is None
+            or atr is None
+            or atr <= 0
+            or price <= 0
+        ):
+            return self.position_size(equity, price)
+        stop_distance = self.config.atr_stop_multiple * atr
+        if stop_distance <= 0:
+            return 0
+        risk_capital = equity * self.config.risk_per_trade_pct
+        qty = int(risk_capital // stop_distance)
+        qty = min(qty, int(self._budget(equity) // price))  # never exceed budget
+        return max(qty, 0)
 
     def check_daily_loss(self, equity: float) -> bool:
         """Return True if trading may continue; flips the kill switch if not."""

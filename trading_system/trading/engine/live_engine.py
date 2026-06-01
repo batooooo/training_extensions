@@ -20,11 +20,22 @@ import pandas as pd
 from ..broker import Broker, Order, OrderSide
 from ..risk import RiskConfig, RiskManager
 from ..strategies import Signal, Strategy
+from ..utils import indicators
 
 logger = logging.getLogger("trading.live")
 
 # Returns recent OHLCV bars for a symbol (most recent last).
 DataFn = Callable[[str], pd.DataFrame]
+
+
+def _latest_atr(data: pd.DataFrame) -> float | None:
+    """Most recent ATR from an OHLCV frame, or None if not computable."""
+    if not {"high", "low", "close"}.issubset(data.columns):
+        return None
+    series = indicators.atr(data["high"], data["low"], data["close"])
+    if series.empty or pd.isna(series.iloc[-1]):
+        return None
+    return float(series.iloc[-1])
 
 
 class LiveEngine:
@@ -115,7 +126,7 @@ class LiveEngine:
             if self.risk.halted:
                 logger.info("entry for %s skipped: trading halted", symbol)
                 return
-            qty = self.risk.position_size(equity, price)
+            qty = self.risk.volatility_position_size(equity, price, _latest_atr(data))
             self._submit(symbol, OrderSide.BUY, qty, "signal")
 
     def reset_day(self) -> None:

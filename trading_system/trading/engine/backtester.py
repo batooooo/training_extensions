@@ -17,6 +17,7 @@ import pandas as pd
 
 from ..risk import RiskConfig, RiskManager
 from ..strategies import Signal, Strategy
+from ..utils import indicators
 
 
 @dataclass
@@ -88,6 +89,11 @@ class Backtester:
     def run(self, data: pd.DataFrame) -> BacktestResult:
         signals = self.strategy.generate_signals(data).shift(1).fillna(Signal.HOLD)
         close = data["close"]
+        # Pre-compute ATR (shifted to avoid look-ahead) for volatility sizing.
+        if {"high", "low"}.issubset(data.columns):
+            atr_series = indicators.atr(data["high"], data["low"], close).shift(1)
+        else:
+            atr_series = pd.Series(index=data.index, dtype=float)
 
         cash = self.initial_cash
         qty = 0.0
@@ -119,7 +125,10 @@ class Backtester:
             equity = cash + qty * price
             if qty == 0 and sig is Signal.BUY and self.risk.check_daily_loss(equity):
                 fill = price * (1 + self.slippage_pct)
-                size = self.risk.position_size(equity, fill)
+                atr_val = atr_series.get(ts)
+                if atr_val is not None and pd.isna(atr_val):
+                    atr_val = None
+                size = self.risk.volatility_position_size(equity, fill, atr_val)
                 if size > 0 and size * fill + self.commission <= cash:
                     cash -= size * fill + self.commission
                     qty = size

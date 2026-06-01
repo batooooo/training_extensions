@@ -18,6 +18,27 @@ def test_position_size_respects_notional_cap():
     assert rm.position_size(100_000, 311) == 2   # 720 // 311 = 2 shares
 
 
+def test_volatility_position_size_risks_fixed_amount():
+    # Risk 1% of 100k = $1,000 per trade; stop = 2*ATR = 2*5 = $10 -> 100 shares.
+    rm = RiskManager(RiskConfig(max_position_pct=1.0, risk_per_trade_pct=0.01,
+                                atr_stop_multiple=2.0))
+    assert rm.volatility_position_size(100_000, price=50, atr=5.0) == 100
+
+
+def test_volatility_size_caps_at_budget():
+    # Tiny stop would imply a huge position, but the cash budget caps it.
+    rm = RiskManager(RiskConfig(max_position_pct=0.1, risk_per_trade_pct=0.01,
+                                atr_stop_multiple=2.0))
+    # risk_capital=1000, stop=0.2 -> 5000 shares uncapped; budget 10k/50=200 shares.
+    assert rm.volatility_position_size(100_000, price=50, atr=0.1) == 200
+
+
+def test_volatility_size_falls_back_without_atr():
+    rm = RiskManager(RiskConfig(max_position_pct=0.1, risk_per_trade_pct=0.01))
+    # No ATR -> behaves like plain percent sizing: 10k budget / 50 = 200.
+    assert rm.volatility_position_size(100_000, price=50, atr=None) == 200
+
+
 def test_daily_loss_kill_switch():
     rm = RiskManager(RiskConfig(max_daily_loss_pct=0.05))
     rm.start_day(100_000)
