@@ -1,5 +1,16 @@
 from trading.broker import Account, Position
-from trading.report import format_report
+from trading.report import format_fill, format_report
+
+
+def test_format_fill_message():
+    msg = format_fill("fill", "VTI", "buy", 0.5337, 373.10)
+    assert "체결" in msg and "VTI" in msg and "BUY" in msg
+    assert "0.5337" in msg and "373.10" in msg
+
+
+def test_format_partial_fill():
+    msg = format_fill("partial_fill", "QQQ", "buy", 0.05, 737.0)
+    assert "부분체결" in msg and "QQQ" in msg
 
 
 def test_report_with_no_positions_shows_pending():

@@ -8,6 +8,19 @@ from __future__ import annotations
 from .broker import Account, Position
 
 
+def format_fill(
+    event: str, symbol: str, side: str, qty: float, price: float
+) -> str:
+    """One-line, phone-friendly fill notification for the trade-update stream."""
+    icon = {"fill": "✅", "partial_fill": "📥"}.get(event, "ℹ️")
+    label = {"fill": "체결", "partial_fill": "부분체결"}.get(event, event)
+    value = qty * price
+    return (
+        f"{icon} {label}! {side.upper()} {symbol} "
+        f"{qty:.4f}주 @ ${price:,.2f}  (${value:,.2f})"
+    )
+
+
 def format_report(
     account: Account,
     positions: list[Position],
