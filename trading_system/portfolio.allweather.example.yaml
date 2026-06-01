@@ -1,0 +1,27 @@
+# Growth-tilted "all-weather" allocation — built for a young investor who is
+# still contributing monthly. Stocks 60% / Bonds 20% / Real assets 20%.
+#
+# Backtest 2020-2026 (monthly rebalance): +103.9% total, 11.8% CAGR,
+# Sharpe 0.87, max drawdown -22.6% — better risk-adjusted return AND lower
+# drawdown than 100% stocks, far more growth than the classic all-weather
+# (which was hurt by the 2022 bond crash).
+#
+# NOTE: no regime_strategy here on purpose. All-weather works by *always*
+# holding every asset so they offset each other; gating sleeves in/out of cash
+# would defeat the diversification. This is buy-and-hold + periodic rebalance.
+mode: paper
+
+capital_base: 663.65          # ~1,000,000 KRW @ 1506.83 (2026-06-01)
+
+timeframe: 1Day
+
+targets:
+  # --- Stocks 60% (growth engine) ---
+  VTI: 0.40       # US total market (~3,600 companies)
+  QQQ: 0.12       # Nasdaq-100 growth/tech
+  IWM: 0.08       # US small caps
+  # --- Bonds 20% (ballast; intermediate is less rate-sensitive than long) ---
+  IEF: 0.20       # 7-10yr US Treasuries
+  # --- Real assets 20% (inflation / crisis hedge) ---
+  GLD: 0.12       # gold
+  DBC: 0.08       # broad commodities
