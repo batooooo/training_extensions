@@ -81,6 +81,23 @@ nohup bash -c 'set -a; . ./.env; set +a; python scripts/watch.py' \
 ```
 PC를 껐다 켜도 자동 실행하려면 launchd(`~/Library/LaunchAgents/`)에 plist 등록.
 
+**launchd 정식 등록 (권장, 자동 재시작·로그인 시 자동 시작):**
+```bash
+# 0) 가상환경/의존성이 준비됐는지 확인 (위 1~3단계)
+# 1) plist의 __PATH__ 를 내 실제 경로로 치환해서 LaunchAgents에 복사
+PROJ="$HOME/training_extensions/trading_system"   # ← 본인 경로로
+chmod +x "$PROJ/deploy/run_watch.sh"
+sed "s|__PATH__|$PROJ|g" "$PROJ/deploy/macos/com.batoo.trading.watch.plist" \
+    > ~/Library/LaunchAgents/com.batoo.trading.watch.plist
+# 2) 등록 + 시작
+launchctl load -w ~/Library/LaunchAgents/com.batoo.trading.watch.plist
+# 상태/로그
+launchctl list | grep trading
+tail -f "$PROJ/watch.log"
+# 중지/해제
+launchctl unload -w ~/Library/LaunchAgents/com.batoo.trading.watch.plist
+```
+
 ### 🪟 Windows
 1) 환경변수 로드 후 실행 (PowerShell):
 ```powershell

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  macOS LaunchAgent for the real-time fill watcher (scripts/watch.py).
+  1. Replace __PATH__ with the absolute path to your trading_system folder,
+     e.g. /Users/batoo/training_extensions/trading_system
+  2. Copy to ~/Library/LaunchAgents/com.batoo.trading.watch.plist
+  3. launchctl load -w ~/Library/LaunchAgents/com.batoo.trading.watch.plist
+  KeepAlive restarts it if it crashes; RunAtLoad starts it at login.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.batoo.trading.watch</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__PATH__/deploy/run_watch.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__PATH__</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>__PATH__/watch.log</string>
+    <key>StandardErrorPath</key>
+    <string>__PATH__/watch.err.log</string>
+</dict>
+</plist>
