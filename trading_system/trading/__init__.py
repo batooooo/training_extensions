@@ -9,7 +9,7 @@ Layers:
 
 Default mode is paper trading; live trading must be enabled explicitly.
 """
-from . import broker, data, engine, risk, strategies, utils
+from . import broker, data, engine, notify, risk, strategies, utils
 from .config import AppConfig, load_config
 from .portfolio import PortfolioManager, plan_rebalance
 
@@ -21,6 +21,7 @@ __all__ = [
     "engine",
     "risk",
     "strategies",
+    "notify",
     "utils",
     "AppConfig",
     "load_config",

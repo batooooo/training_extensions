@@ -127,6 +127,27 @@ python scripts/rebalance.py --config portfolio.yaml --from-holdings --contributi
 - `portfolio.allweather.example.yaml` — 글로벌 성장형 올웨더(주식60/채권20/실물20,
   미국+선진국+신흥국), 매수 후 정기 리밸런싱
 
+## 텔레그램 알림 (선택)
+
+리밸런싱·주문 내역을 핸드폰으로 받습니다. 키가 없으면 자동으로 로그로 대체됩니다.
+
+1. 텔레그램에서 **@BotFather** 에게 `/newbot` → 봇 생성 후 **HTTP API 토큰** 복사
+2. 만든 봇에게 아무 메시지나 한 번 보낸 뒤, **@userinfobot** 으로 내 **chat id** 확인
+3. 환경변수 설정:
+   ```bash
+   export TELEGRAM_BOT_TOKEN=123456:ABC...
+   export TELEGRAM_CHAT_ID=987654321
+   ```
+4. 이후 `rebalance.py` 실행 시 아래 같은 메시지가 자동 전송됩니다:
+   ```
+   📊 Rebalance (capital $663.65)
+     BUY VTI $199.09
+     BUY IEF $132.73
+     ...
+   ```
+
+> 알림 전송이 실패해도 매매 로직은 절대 멈추지 않습니다(실패 시 로그만 남김).
+
 ## 테스트
 
 ```bash

@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from trading import strategies  # noqa: E402
 from trading.broker import AlpacaBroker  # noqa: E402
 from trading.data import fetch_alpaca_bars  # noqa: E402
+from trading.notify import from_env as notifier_from_env  # noqa: E402
 from trading.portfolio import PortfolioManager  # noqa: E402
 
 
@@ -75,7 +76,8 @@ def main() -> None:
                                  api_key=key, api_secret=secret).tail(260)
 
     pm = PortfolioManager(broker, targets, capital, strategy=strategy,
-                          dry_run=args.dry_run or cfg.get("mode") == "backtest")
+                          dry_run=args.dry_run or cfg.get("mode") == "backtest",
+                          notifier=notifier_from_env())
     logging.info("rebalancing to %s with capital=$%.2f (contribution=$%.2f)",
                  targets, capital, args.contribution)
     pm.rebalance(data_fn=data_fn)

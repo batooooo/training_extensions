@@ -18,6 +18,7 @@ from typing import Callable
 import pandas as pd
 
 from .broker import Broker, Order, OrderSide
+from .notify import Notifier, NullNotifier
 from .strategies import Signal, Strategy
 
 logger = logging.getLogger("trading.portfolio")
@@ -64,6 +65,7 @@ class PortfolioManager:
         strategy: Strategy | None = None,
         dry_run: bool = True,
         min_trade: float = 1.0,
+        notifier: Notifier | None = None,
     ):
         if sum(targets.values()) > 1.0 + 1e-9:
             raise ValueError("target weights sum to more than 1.0")
@@ -73,6 +75,7 @@ class PortfolioManager:
         self.strategy = strategy
         self.dry_run = dry_run
         self.min_trade = min_trade
+        self.notifier = notifier or NullNotifier()
 
     def _regime_adjusted_targets(self, data_fn: DataFn | None) -> dict[str, float]:
         """Zero out any sleeve whose strategy signal is not BUY (-> sell to cash)."""
@@ -96,6 +99,7 @@ class PortfolioManager:
         orders = plan_rebalance(
             targets, self.capital_base, prices, positions, self.min_trade
         )
+        lines = []
         for order in orders:
             if order.side is OrderSide.BUY:
                 what = f"${order.notional:.2f}"
@@ -106,4 +110,16 @@ class PortfolioManager:
             else:
                 res = self.broker.submit_order(order)
                 logger.info("ORDER %s %s %s -> %s", order.side.value, order.symbol, what, res.status)
+            lines.append(f"  {order.side.value.upper()} {order.symbol} {what}")
+
+        self._notify_summary(lines)
         return orders
+
+    def _notify_summary(self, lines: list[str]) -> None:
+        tag = "DRY-RUN " if self.dry_run else ""
+        if lines:
+            body = "\n".join(lines)
+            msg = f"📊 {tag}Rebalance (capital ${self.capital_base:,.2f})\n{body}"
+        else:
+            msg = f"📊 {tag}Rebalance: already on target, no trades."
+        self.notifier.send(msg)
