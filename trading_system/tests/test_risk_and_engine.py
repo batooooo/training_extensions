@@ -71,6 +71,25 @@ def test_live_engine_buys_through_broker():
     assert pos is not None and pos.qty == 50  # 50% of 10k / 100
 
 
+def test_live_engine_uses_capital_base_for_sizing():
+    # Account holds 100k but capital_base says trade as if we have ~$663.
+    broker = SimulatedBroker(cash=100_000)
+    broker.set_price("AAPL", 100)
+    df = pd.DataFrame({"close": [100, 100, 100]})
+    engine = LiveEngine(
+        broker=broker,
+        strategy=_AlwaysBuy(),
+        symbols=["AAPL"],
+        data_fn=lambda s: df,
+        risk_config=RiskConfig(max_position_pct=1.0),
+        dry_run=False,
+        capital_base=663.65,
+    )
+    engine.run_once()
+    pos = broker.get_position("AAPL")
+    assert pos is not None and pos.qty == 6  # 663.65 // 100, not 1000 (full equity)
+
+
 def test_live_engine_dry_run_submits_nothing():
     broker = SimulatedBroker(cash=10_000)
     broker.set_price("AAPL", 100)

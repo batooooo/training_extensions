@@ -64,11 +64,12 @@ def main() -> None:
         data_fn=data_fn,
         risk_config=cfg.risk,
         dry_run=args.dry_run or cfg.mode == "backtest",
+        capital_base=cfg.capital_base,
     )
 
     logging.info(
-        "starting engine: mode=%s strategy=%s symbols=%s dry_run=%s",
-        cfg.mode, strategy.name, cfg.symbols, engine.dry_run,
+        "starting engine: mode=%s strategy=%s symbols=%s dry_run=%s capital_base=%s",
+        cfg.mode, strategy.name, cfg.symbols, engine.dry_run, cfg.capital_base,
     )
 
     if args.once:

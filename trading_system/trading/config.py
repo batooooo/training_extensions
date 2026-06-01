@@ -24,6 +24,9 @@ class AppConfig:
     lookback_bars: int = 200
     poll_seconds: int = 60
     initial_cash: float = 100_000.0
+    #: Optional fixed capital for sizing in live/paper mode (account currency).
+    #: "Trade as if I only have this much" regardless of real account equity.
+    capital_base: float | None = None
 
     # Credentials, populated from the environment.
     api_key: str | None = None
@@ -62,4 +65,7 @@ def load_config(path: str | Path) -> AppConfig:
         lookback_bars=int(data_raw.get("lookback_bars", 200)),
         poll_seconds=int(raw.get("poll_seconds", 60)),
         initial_cash=float(raw.get("initial_cash", 100_000.0)),
+        capital_base=(
+            float(raw["capital_base"]) if raw.get("capital_base") is not None else None
+        ),
     )

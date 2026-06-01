@@ -36,6 +36,7 @@ class LiveEngine:
         data_fn: DataFn,
         risk_config: RiskConfig | None = None,
         dry_run: bool = True,
+        capital_base: float | None = None,
     ):
         self.broker = broker
         self.strategy = strategy
@@ -43,6 +44,10 @@ class LiveEngine:
         self.data_fn = data_fn
         self.risk = RiskManager(risk_config)
         self.dry_run = dry_run
+        # When set, position sizing uses this fixed capital amount instead of
+        # the broker's full account equity -- e.g. "trade as if I only have
+        # 1,000,000 KRW" even though the paper account holds $100k.
+        self.capital_base = capital_base
         self._day_started = False
 
     def _submit(self, symbol: str, side: OrderSide, qty: float, why: str) -> None:
@@ -61,6 +66,11 @@ class LiveEngine:
     def run_once(self) -> None:
         """Run one decision cycle across all symbols."""
         account = self.broker.get_account()
+        # Budget used for position sizing: the simulated capital base if set,
+        # otherwise the real account equity.
+        sizing_equity = (
+            self.capital_base if self.capital_base is not None else account.equity
+        )
         if not self._day_started:
             self.risk.start_day(account.equity)
             self._day_started = True
@@ -70,7 +80,7 @@ class LiveEngine:
 
         for symbol in self.symbols:
             try:
-                self._process_symbol(symbol, account.equity)
+                self._process_symbol(symbol, sizing_equity)
             except Exception:  # one bad symbol shouldn't kill the loop
                 logger.exception("error processing %s", symbol)
 

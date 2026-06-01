@@ -16,6 +16,11 @@ strategy:
     fast: 20
     slow: 50
 
+# OPTIONAL: size positions as if you only had this much capital (account
+# currency), ignoring the rest of the account equity. Handy for paper-trading
+# a realistic small amount. Omit to size off full account equity.
+# capital_base: 663.65         # e.g. 1,000,000 KRW at 1506.83 KRW/USD
+
 risk:
   max_position_pct: 0.10       # at most 10% of equity per position
   # max_position_notional: 720 # OPTIONAL absolute cash cap per position
