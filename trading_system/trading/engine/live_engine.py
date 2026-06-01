@@ -1,0 +1,107 @@
+"""Live (and paper) trading engine.
+
+On each cycle, for every symbol it:
+  1. pulls recent bars and the current position from the broker;
+  2. checks risk exits (stop-loss / take-profit) and the daily-loss kill switch;
+  3. asks the strategy for the latest signal;
+  4. routes BUY/SELL through the risk manager for sizing, then submits an order.
+
+The strategy and risk logic are byte-for-byte the same ones the backtester
+exercises, so behaviour you validated offline carries over. ``dry_run=True``
+logs intended orders without submitting them -- the safe default.
+"""
+from __future__ import annotations
+
+import logging
+from typing import Callable
+
+import pandas as pd
+
+from ..broker import Broker, Order, OrderSide
+from ..risk import RiskConfig, RiskManager
+from ..strategies import Signal, Strategy
+
+logger = logging.getLogger("trading.live")
+
+# Returns recent OHLCV bars for a symbol (most recent last).
+DataFn = Callable[[str], pd.DataFrame]
+
+
+class LiveEngine:
+    def __init__(
+        self,
+        broker: Broker,
+        strategy: Strategy,
+        symbols: list[str],
+        data_fn: DataFn,
+        risk_config: RiskConfig | None = None,
+        dry_run: bool = True,
+    ):
+        self.broker = broker
+        self.strategy = strategy
+        self.symbols = symbols
+        self.data_fn = data_fn
+        self.risk = RiskManager(risk_config)
+        self.dry_run = dry_run
+        self._day_started = False
+
+    def _submit(self, symbol: str, side: OrderSide, qty: float, why: str) -> None:
+        if qty <= 0:
+            return
+        order = Order(symbol=symbol, qty=qty, side=side)
+        if self.dry_run:
+            logger.info("[DRY-RUN] %s %s x%s (%s)", side.value, symbol, qty, why)
+            return
+        result = self.broker.submit_order(order)
+        logger.info(
+            "ORDER %s %s x%s (%s) -> id=%s status=%s",
+            side.value, symbol, qty, why, result.id, result.status,
+        )
+
+    def run_once(self) -> None:
+        """Run one decision cycle across all symbols."""
+        account = self.broker.get_account()
+        if not self._day_started:
+            self.risk.start_day(account.equity)
+            self._day_started = True
+
+        if not self.risk.check_daily_loss(account.equity):
+            logger.warning("daily loss limit hit -- new entries halted")
+
+        for symbol in self.symbols:
+            try:
+                self._process_symbol(symbol, account.equity)
+            except Exception:  # one bad symbol shouldn't kill the loop
+                logger.exception("error processing %s", symbol)
+
+    def _process_symbol(self, symbol: str, equity: float) -> None:
+        data = self.data_fn(symbol)
+        if data is None or data.empty:
+            logger.warning("no data for %s, skipping", symbol)
+            return
+
+        price = float(data["close"].iloc[-1])
+        position = self.broker.get_position(symbol)
+        held = position.qty if position else 0.0
+
+        # 1) risk exit takes priority over any strategy signal
+        if held > 0:
+            reason = self.risk.should_exit(position.avg_entry_price, price)
+            if reason is not None:
+                self._submit(symbol, OrderSide.SELL, held, reason)
+                return
+
+        signal = self.strategy.latest_signal(data)
+
+        if signal is Signal.SELL and held > 0:
+            self._submit(symbol, OrderSide.SELL, held, "signal")
+        elif signal is Signal.BUY and held == 0:
+            if self.risk.halted:
+                logger.info("entry for %s skipped: trading halted", symbol)
+                return
+            qty = self.risk.position_size(equity, price)
+            self._submit(symbol, OrderSide.BUY, qty, "signal")
+
+    def reset_day(self) -> None:
+        """Call at the start of a new trading day."""
+        self._day_started = False

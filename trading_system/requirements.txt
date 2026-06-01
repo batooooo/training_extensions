@@ -1,0 +1,10 @@
+# Core (needed for backtesting, strategies, tests)
+pandas>=1.5
+numpy>=1.23
+PyYAML>=6.0
+
+# Live/paper trading via Alpaca (optional for backtesting offline CSV data)
+alpaca-py>=0.21
+
+# Dev/test
+pytest>=7.0

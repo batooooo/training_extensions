@@ -1,0 +1,30 @@
+# Trading system configuration. Copy to config.yaml and edit.
+# API credentials are NOT here -- set ALPACA_API_KEY / ALPACA_API_SECRET in the
+# environment (see .env.example).
+
+# "backtest" | "paper" | "live".  Start with paper. "live" trades REAL money.
+mode: paper
+
+# Symbols to trade.
+symbols:
+  - AAPL
+  - MSFT
+
+strategy:
+  name: sma_crossover          # sma_crossover | rsi_reversion | bollinger | macd
+  params:
+    fast: 20
+    slow: 50
+
+risk:
+  max_position_pct: 0.10       # at most 10% of equity per position
+  stop_loss_pct: 0.05          # exit at -5% from entry
+  take_profit_pct: 0.15        # exit at +15% from entry
+  max_daily_loss_pct: 0.03     # halt new entries after -3% on the day
+
+data:
+  timeframe: 1Day              # 1Min | 5Min | 15Min | 1Hour | 1Day
+  lookback_bars: 200           # bars of history fed to the strategy each cycle
+
+poll_seconds: 60               # seconds between decision cycles
+initial_cash: 100000           # used for backtests
