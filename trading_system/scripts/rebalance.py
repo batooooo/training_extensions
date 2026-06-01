@@ -34,6 +34,9 @@ def main() -> None:
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--contribution", type=float, default=0.0,
                    help="extra capital added this run (monthly DCA)")
+    p.add_argument("--from-holdings", action="store_true",
+                   help="base capital on current holdings value + contribution "
+                        "(correct for ongoing monthly DCA; compounds gains)")
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -46,13 +49,26 @@ def main() -> None:
         raise SystemExit("ALPACA_API_KEY / ALPACA_API_SECRET must be set in the environment")
 
     targets = cfg["targets"]
-    capital = float(cfg.get("capital_base", 0.0)) + args.contribution
     timeframe = cfg.get("timeframe", "1Day")
 
     broker = AlpacaBroker(key, secret, paper=cfg.get("mode", "paper") != "live")
     strategy = None
     if cfg.get("regime_strategy"):
         strategy = strategies.create(cfg["regime_strategy"])
+
+    # Capital base: either the current value of the target holdings (so gains
+    # compound and each month only deploys the new contribution), or the fixed
+    # capital_base from the config. Plus this run's contribution.
+    if args.from_holdings:
+        held = {p.symbol: p.qty for p in broker.get_positions()}
+        holdings_value = sum(
+            qty * broker.get_last_price(sym)
+            for sym, qty in held.items() if sym in targets
+        )
+        capital = holdings_value + args.contribution
+        logging.info("holdings value=$%.2f + contribution=$%.2f", holdings_value, args.contribution)
+    else:
+        capital = float(cfg.get("capital_base", 0.0)) + args.contribution
 
     def data_fn(symbol: str):
         return fetch_alpaca_bars(symbol, start="2024-01-01", timeframe=timeframe,
