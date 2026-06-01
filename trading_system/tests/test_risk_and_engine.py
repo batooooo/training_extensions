@@ -12,6 +12,12 @@ def test_position_size_respects_cap():
     assert rm.position_size(100_000, 100) == 100
 
 
+def test_position_size_respects_notional_cap():
+    # 10% of 100k = 10k budget, but notional cap of 720 binds first.
+    rm = RiskManager(RiskConfig(max_position_pct=0.1, max_position_notional=720))
+    assert rm.position_size(100_000, 311) == 2   # 720 // 311 = 2 shares
+
+
 def test_daily_loss_kill_switch():
     rm = RiskManager(RiskConfig(max_daily_loss_pct=0.05))
     rm.start_day(100_000)

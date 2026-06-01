@@ -17,6 +17,9 @@ from dataclasses import dataclass
 class RiskConfig:
     #: Max fraction of equity to deploy into a single position (0..1).
     max_position_pct: float = 0.10
+    #: Absolute cash cap per position (account currency). None disables.
+    #: When set, the effective budget is min(equity * max_position_pct, this).
+    max_position_notional: float | None = None
     #: Stop-loss as a fraction below entry (e.g. 0.05 = -5%). None disables.
     stop_loss_pct: float | None = 0.05
     #: Take-profit as a fraction above entry. None disables.
@@ -46,6 +49,8 @@ class RiskManager:
         if price <= 0:
             return 0
         budget = equity * self.config.max_position_pct
+        if self.config.max_position_notional is not None:
+            budget = min(budget, self.config.max_position_notional)
         return int(budget // price)
 
     def check_daily_loss(self, equity: float) -> bool:

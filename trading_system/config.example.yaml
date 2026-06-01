@@ -18,6 +18,8 @@ strategy:
 
 risk:
   max_position_pct: 0.10       # at most 10% of equity per position
+  # max_position_notional: 720 # OPTIONAL absolute cash cap per position
+                               # (effective budget = min(pct*equity, this))
   stop_loss_pct: 0.05          # exit at -5% from entry
   take_profit_pct: 0.15        # exit at +15% from entry
   max_daily_loss_pct: 0.03     # halt new entries after -3% on the day
