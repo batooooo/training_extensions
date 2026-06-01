@@ -69,8 +69,12 @@ python scripts/backtest.py --csv data/SAMPLE.csv \
    cp .env.example .env   # 편집 후
    export ALPACA_API_KEY=...  ALPACA_API_SECRET=...
    ```
-3. 설정 파일 작성: `cp config.example.yaml config.yaml` (전략·종목·리스크 편집)
-4. 실행:
+3. **연동 점검** (주문 없이 계정·데이터 접속만 확인):
+   ```bash
+   python scripts/check_connection.py --symbol AAPL
+   ```
+4. 설정 파일 작성: `cp config.example.yaml config.yaml` (전략·종목·리스크 편집)
+5. 실행:
    ```bash
    # 주문은 내지 않고 의도만 로그로 확인 (가장 안전)
    python scripts/run_live.py --config config.yaml --dry-run --once
