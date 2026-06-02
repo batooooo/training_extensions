@@ -1,0 +1,33 @@
+name: Market-open portfolio report
+
+# Sends a Telegram portfolio report shortly after the US market opens, so the
+# overnight fills are waiting for you in the morning -- runs on GitHub's
+# servers, independent of any local machine.
+#
+# Requires four repository secrets (Settings -> Secrets and variables ->
+# Actions): ALPACA_API_KEY, ALPACA_API_SECRET, TELEGRAM_BOT_TOKEN,
+# TELEGRAM_CHAT_ID.
+
+on:
+  schedule:
+    # 13:35 UTC = 09:35 US Eastern (EDT) = 22:35 KST -- just after the 09:30 open.
+    - cron: "35 13 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install pandas numpy PyYAML alpaca-py
+      - name: Send portfolio report to Telegram
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/report.py

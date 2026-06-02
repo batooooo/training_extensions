@@ -1,0 +1,39 @@
+# Crypto 24/7 trading config. Copy to config.yaml and edit.
+# Credentials come from env: CRYPTO_API_KEY / CRYPTO_API_SECRET (or BINANCE_*).
+#
+# ⚠️ Crypto -- especially altcoins -- is extremely volatile and speculative.
+# Use only money you can afford to lose. Start on TESTNET (mode: paper).
+
+mode: paper            # "backtest" | "paper" (testnet) | "live" (real money)
+exchange: binance      # any ccxt exchange id (binance, binanceus, ...)
+
+# Aggressive: majors + altcoins. (USDT-quoted pairs.)
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - SOL/USDT
+  - DOGE/USDT
+  - AVAX/USDT
+
+strategy:
+  name: trend_momentum     # trend_momentum | sma_crossover | rsi_reversion | bollinger | macd
+  params:
+    trend_window: 100      # on 1h candles ~4 days; tune per timeframe
+    fast: 20
+    slow: 50
+
+# Trade as if you only have this much (quote currency, e.g. USDT). Keep it small!
+capital_base: 300
+
+risk:
+  max_position_pct: 0.25       # at most 25% of capital per coin
+  stop_loss_pct: 0.15          # crypto swings hard -> wider stop (-15%)
+  take_profit_pct: 0.40        # let winners run
+  max_daily_loss_pct: 0.20     # halt new entries after -20% on the day
+
+data:
+  timeframe: 1h                # 1m,5m,15m,1h,4h,1d
+  lookback_bars: 300
+
+poll_seconds: 60               # 24/7 loop interval
+initial_cash: 10000            # for backtests

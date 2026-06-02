@@ -1,0 +1,37 @@
+# Trading system configuration. Copy to config.yaml and edit.
+# API credentials are NOT here -- set ALPACA_API_KEY / ALPACA_API_SECRET in the
+# environment (see .env.example).
+
+# "backtest" | "paper" | "live".  Start with paper. "live" trades REAL money.
+mode: paper
+
+# Symbols to trade.
+symbols:
+  - AAPL
+  - MSFT
+
+strategy:
+  name: sma_crossover          # sma_crossover | rsi_reversion | bollinger | macd | trend_momentum
+  params:
+    fast: 20
+    slow: 50
+
+# OPTIONAL: size positions as if you only had this much capital (account
+# currency), ignoring the rest of the account equity. Handy for paper-trading
+# a realistic small amount. Omit to size off full account equity.
+# capital_base: 663.65         # e.g. 1,000,000 KRW at 1506.83 KRW/USD
+
+risk:
+  max_position_pct: 0.10       # at most 10% of equity per position
+  # max_position_notional: 720 # OPTIONAL absolute cash cap per position
+                               # (effective budget = min(pct*equity, this))
+  stop_loss_pct: 0.05          # exit at -5% from entry
+  take_profit_pct: 0.15        # exit at +15% from entry
+  max_daily_loss_pct: 0.03     # halt new entries after -3% on the day
+
+data:
+  timeframe: 1Day              # 1Min | 5Min | 15Min | 1Hour | 1Day
+  lookback_bars: 200           # bars of history fed to the strategy each cycle
+
+poll_seconds: 60               # seconds between decision cycles
+initial_cash: 100000           # used for backtests

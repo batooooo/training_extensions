@@ -1,0 +1,22 @@
+# Target-weight portfolio (core/satellite) for a small, growing account.
+# Credentials come from the environment (ALPACA_API_KEY / ALPACA_API_SECRET).
+mode: paper
+
+# ~1,000,000 KRW at 1506.83 KRW/USD (2026-06-01). Bump this as you contribute,
+# or pass --contribution on each monthly run for dollar-cost averaging.
+capital_base: 663.65
+
+# A strategy used only as a per-sleeve REGIME GATE: a sleeve is funded only while
+# its signal is BUY (price in an uptrend); otherwise it is sold to cash.
+regime_strategy: trend_momentum
+
+timeframe: 1Day
+
+# Target weights (sum <= 1.0; remainder stays in cash). Fractional shares let a
+# small account hit these precisely.
+targets:
+  # --- Core 80%: broad, diversified, the stability engine ---
+  VTI: 0.55      # total US market (~3,600 companies)
+  IWM: 0.25      # US small caps
+  # --- Satellite 20%: growth tilt for upside (quality, not gambling) ---
+  QQQ: 0.20      # Nasdaq-100 (large-cap growth/tech)

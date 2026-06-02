@@ -1,0 +1,30 @@
+# Global growth-tilted "all-weather" allocation for a young, contributing
+# investor. Stocks 60% (US 45% + international 15%) / Bonds 20% / Real assets 20%.
+#
+# Backtest 2020-2026 (monthly rebalance): ~10.7% CAGR, Sharpe 0.83,
+# max drawdown -22.3%. US-only was marginally higher recently (US beat
+# international this decade), but global diversification is insurance against
+# any single country underperforming -- the same logic as not betting on one
+# stock. Real assets (gold/commodities) hedge inflation and crises.
+#
+# NOTE: no regime_strategy on purpose -- all-weather holds every asset always so
+# they offset each other. This is buy-and-hold + periodic rebalance.
+mode: paper
+
+capital_base: 663.65          # ~1,000,000 KRW @ 1506.83 (2026-06-01)
+
+timeframe: 1Day
+
+targets:
+  # --- US stocks 45% ---
+  VTI: 0.30       # US total market (~3,600 companies)
+  QQQ: 0.10       # Nasdaq-100 growth/tech
+  IWM: 0.05       # US small caps
+  # --- International stocks 15% (country diversification) ---
+  VEA: 0.10       # developed markets ex-US
+  VWO: 0.05       # emerging markets
+  # --- Bonds 20% (ballast; intermediate is less rate-sensitive than long) ---
+  IEF: 0.20       # 7-10yr US Treasuries
+  # --- Real assets 20% (inflation / crisis hedge) ---
+  GLD: 0.12       # gold
+  DBC: 0.08       # broad commodities

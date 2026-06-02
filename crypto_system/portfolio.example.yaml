@@ -1,0 +1,39 @@
+# Data-driven crypto basket (rebalance with a trend regime gate).
+#
+# Built from a 19-coin backtest: most altcoins are wealth destroyers
+# (buy&hold avg drawdown ~-78%; ~half stay negative even with a trend strategy).
+# So we hold only LIQUID MAJORS, and a per-coin trend filter (regime_strategy)
+# moves any coin that loses its uptrend to CASH automatically -- this is what
+# kept the strategy out of the -90% alt collapses.
+#
+# ⚠️ Crypto is high-risk. Keep capital_base small (money you can lose). Testnet first.
+mode: paper
+exchange: binance
+
+# Liquid majors only (chosen by liquidity/longevity, NOT by who won the backtest
+# -- that would be hindsight). The trend gate decides what to actually hold.
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - BNB/USDT
+  - SOL/USDT
+  - XRP/USDT
+  - DOGE/USDT
+
+# Per-coin regime gate: a coin is funded only while it's in an uptrend
+# (price > 200-bar trend + positive momentum); otherwise it's sold to cash.
+regime_strategy: trend_momentum
+
+timeframe: 1d
+
+# Trade as if you only have this much (USDT). Crypto = speculative satellite; small!
+capital_base: 300
+
+# Target weights (sum <= 1; remainder = cash). BTC/ETH heavy, alts smaller.
+targets:
+  BTC/USDT: 0.30
+  ETH/USDT: 0.25
+  BNB/USDT: 0.15
+  SOL/USDT: 0.12
+  XRP/USDT: 0.10
+  DOGE/USDT: 0.08

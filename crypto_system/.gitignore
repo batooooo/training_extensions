@@ -1,0 +1,15 @@
+# Secrets & local config -- never commit
+.env
+config.yaml
+portfolio.yaml
+
+# Generated data / outputs
+data/*.csv
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
