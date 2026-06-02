@@ -1,0 +1,10 @@
+# Core (backtesting, strategies, tests)
+pandas>=1.5
+numpy>=1.23
+PyYAML>=6.0
+
+# Crypto exchange connectivity (Binance and many others via a unified API)
+ccxt>=4.0
+
+# Dev/test
+pytest>=7.0
